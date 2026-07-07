@@ -10,7 +10,7 @@ Consensus Algorithm" (2014), adapted for UAV swarm contexts.
 from dataclasses import dataclass, field
 from enum import Enum, auto
 import random
-import time
+import time as _time
 
 
 class NodeState(Enum):
@@ -50,7 +50,7 @@ class SwarmConsensus:
         self.nodes[node_id] = ConsensusNode(
             node_id=node_id,
             election_timeout=random.uniform(*self.election_timeout_range),
-            last_heartbeat=time.time(),
+            last_heartbeat=_time.time(),
         )
 
     def remove_node(self, node_id: str):
@@ -124,7 +124,7 @@ class SwarmConsensus:
                 if node.node_id != candidate_id:
                     node.leader_id = candidate_id
                     node.state = NodeState.FOLLOWER
-                    node.last_heartbeat = time.time()
+                    node.last_heartbeat = _time.time()
             return {"elected": True, "leader": candidate_id, "votes": len(votes)}
         candidate.state = NodeState.FOLLOWER
         return {"elected": False, "votes": len(votes)}
@@ -138,13 +138,13 @@ class SwarmConsensus:
         count = 0
         for node in self.nodes.values():
             if node.node_id != leader_id:
-                node.last_heartbeat = time.time()
+                node.last_heartbeat = _time.time()
                 node.leader_id = leader_id
                 count += 1
         return count
 
     def check_leader_timeout(self) -> str:
-        now = time.time()
+        now = _time.time()
         for node in self.nodes.values():
             if node.state == NodeState.FOLLOWER:
                 if now - node.last_heartbeat > node.election_timeout:
